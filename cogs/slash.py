@@ -10,6 +10,7 @@ class Slash(commands.Cog):
         self.game_active = False
         self.players = {}
         self.winner = []
+        self.tie_players = []
 
     @app_commands.command(name = "start_game", description = "開始猜拳遊戲")
     async def start_game(self, interaction: discord.Interaction):
@@ -50,14 +51,19 @@ class Slash(commands.Cog):
             await interaction.response.send_message("需要更多玩家參與遊戲")
         elif len(self.players) >= 2:
             self.determine_winner()
-            await interaction.response.send_message(f"當前勝利者是 {', '.join(self.winner)}")
+            if self.tie_players:
+                await interaction.response.send_message(f"目前平手的玩家有 {', '.join(self.tie_players)}")
+            elif self.winner:
+                await interaction.response.send_message(f"當前勝利者是 {', '.join(self.winner)}")
 
         if len(set(self.players.values())) == 3 or self.winner:
             await self.end_game(interaction)
 
     def determine_winner(self):
         choices = list(self.players.values())
-        if "rock" in choices and "scissors" in choices:
+        if len(set(choices)) == 1:
+            self.tie_players = list(self.players.keys())
+        elif "rock" in choices and "scissors" in choices:
             self.winner = [player for player, choice in self.players.items() if choice == "rock"]
         elif "scissors" in choices and "paper" in choices:
             self.winner = [player for player, choice in self.players.items() if choice == "scissors"]
