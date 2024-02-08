@@ -1,4 +1,4 @@
-#!/Users/moonjam/Desktop/Code/discord-bot-mora/bin/python3.12
+#!/Users/moonjam/Desktop/Code/discord-bot-Rock-Paper-Scissors/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
