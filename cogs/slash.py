@@ -5,6 +5,7 @@ from discord.ext import commands
 from discord.app_commands import Choice
 from prettytable import PrettyTable
 
+# TODO: switch language to English
 
 class Slash(commands.Cog):
     def __init__(self, bot: commands.Bot):
