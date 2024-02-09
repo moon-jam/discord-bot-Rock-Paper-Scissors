@@ -14,10 +14,10 @@ class TaskBase(commands.Cog):
         self.hi.cancel()
 
     # 定義要執行的循環函式
-    @tasks.loop(seconds = 1)
+    @tasks.loop(seconds = 60)
     async def hi(self):
         execution_time = int(time.time() - self.start_time)
-        print(f"{execution_time}sec: Hello, world!")
+        print(f"{execution_time/60}min")
 
 class TaskAction(commands.Cog):
     def __init__(self, bot: commands.Bot):
