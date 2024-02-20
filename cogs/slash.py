@@ -31,7 +31,7 @@ class Slash(commands.Cog):
             return
 
         await self.end_game(interaction)
-        await interaction.response.send_message("遊戲已被強制終止")
+        print("遊戲已被強制終止")
 
     @app_commands.command(name="play", description="出拳")
     @app_commands.describe(choice="輸入你的拳")
@@ -57,18 +57,17 @@ class Slash(commands.Cog):
 
         if len(self.players) == 1:
             await interaction.response.send_message("需要更多玩家參與遊戲")
-        elif len(self.players) >= 2:
+        elif len(self.players) == 2:
             self.determine_winner()
             if self.tie_players:
                 await interaction.response.send_message(
-                    f"目前平手的玩家有 ** {'**, **'.join(self.tie_players)}"+"**"
+                    f"目前平手的玩家有 ** {'**, **'.join(self.tie_players)}" + "**"
                 )
             elif self.winner:
                 await interaction.response.send_message(
-                    f"當前勝利者是 ** {'**, **'.join(self.winner)}"+"**"
+                    f"當前勝利者是 ** {'**, **'.join(self.winner)}" + "**"
                 )
-
-        if len(set(self.players.values())) == 3 or self.winner:
+        elif len(self.players) == 3:
             await self.end_game(interaction)
 
     def determine_winner(self):
@@ -94,17 +93,38 @@ class Slash(commands.Cog):
             self.tie_players = []
 
     async def end_game(self, interaction: discord.Interaction):
+        print("end_game started")
         table = PrettyTable(["玩家", "選擇"])
         for player, choice in self.players.items():
             if player in self.winner:
                 player = f"**{player}**"
             table.add_row([player, choice])
-        await interaction.response.send_message(
-            f"```遊戲結束，勝利者是 {', '.join(self.winner)}，所有人的選擇是：\n{table}```"
-        )
+        if len(self.players) == 3:
+            if len(self.players) == len(self.tie_players):
+                await interaction.response.send_message(
+                    f"遊戲結束，三種拳都已經被出過了，所有玩家都平手" + f"\n```所有人的選擇是：\n{table}```"
+                )
+            elif self.winner:
+                await interaction.response.send_message(
+                    f"遊戲結束，三種拳都已經被出過了，最後一拳還未出時，勝利者是 ** {'**, **'.join(self.winner)}"
+                    + f"** \n```所有人的選擇是：\n{table}```"
+                )
+        elif self.tie_players:
+            await interaction.response.send_message(
+                f"遊戲結束，平手的玩家有 ** {'**, **'.join(self.tie_players)}"
+                + f"** \n```所有人的選擇是：\n{table}```"
+            )
+        else:
+            await interaction.response.send_message(
+                f"遊戲結束，勝利者是  ** {'**, **'.join(self.winner)}"
+                + f"** \n```所有人的選擇是：\n{table}```"
+            )
+
         self.game_active = False
         self.players = {}
         self.winner = []
+        self.tie_players = []
+        print("end_game finished")
 
     @app_commands.command(name="rules", description="顯示遊戲規則")
     async def rules(self, interaction: discord.Interaction):
