@@ -82,6 +82,7 @@ This is a Discord bot that allows users to play the game of Rock, Paper, Scissor
 Configuration variables are stored in `config.py`. You need to set the following:
 
 - `discord_bot_token`: The token of your Discord bot.
+- `channel_id`: The ID of the channel where the bot will be used.
 
 ## FAQ
 

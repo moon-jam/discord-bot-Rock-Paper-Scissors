@@ -1,6 +1,7 @@
 import time, discord, datetime
 # 導入discord.ext模組中的tasks工具
 from discord.ext import tasks, commands
+from config import channel_id
 
 class TaskBase(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -72,8 +73,6 @@ class TaskTime(commands.Cog):
     # 每日十二點發送 "晚安!瑪卡巴卡!" 訊息
     @tasks.loop(time = everyday_time)
     async def everyday(self):
-        # 設定發送訊息的頻道ID
-        channel_id = 1021706869724684376
         channel = self.bot.get_channel(channel_id)
         embed = discord.Embed(
             title = "🛏 晚安！瑪卡巴卡！",
@@ -96,8 +95,6 @@ class TaskTimes(commands.Cog):
     # 每小時發送報時訊息
     @tasks.loop(time = every_hour_time)
     async def every_hour(self):
-        # 設定發送訊息的頻道ID
-        channel_id = 1021706869724684376
         channel = self.bot.get_channel(channel_id)
         embed = discord.Embed(
             title = f"⏰ 現在時間【{datetime.time.hour()}】時",
