@@ -73,6 +73,8 @@ class Slash(commands.Cog):
         choices = list(self.players.values())
         if len(set(choices)) == 1:
             self.tie_players = list(self.players.keys())
+        elif len(set(choices)) == 3:
+            return
         elif "rock" in choices and "scissors" in choices:
             self.winner = [
                 player for player, choice in self.players.items() if choice == "rock"
