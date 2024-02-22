@@ -56,6 +56,8 @@ class Slash(commands.Cog):
 
         if len(self.players) == 1:
             await interaction.response.send_message("需要更多玩家參與遊戲")
+        elif len(set(self.players.values())) == 3:
+            await self.end_game(interaction)
         elif len(self.players) == 2:
             self.determine_winner()
             if self.tie_players:
@@ -66,8 +68,6 @@ class Slash(commands.Cog):
                 await interaction.response.send_message(
                     f"當前勝利者是 ** {'**, **'.join(self.winner)}" + "**"
                 )
-        elif len(set(self.players.values())) == 3:
-            await self.end_game(interaction)
 
     def determine_winner(self):
         choices = list(self.players.values())
@@ -99,15 +99,10 @@ class Slash(commands.Cog):
                 player = f"**{player}**"
             table.add_row([player, choice])
         if len(set(self.players.values())) == 3:
-            if len(self.players) == len(self.tie_players):
-                await interaction.response.send_message(
-                    f"遊戲結束，三種拳都已經被出過了，所有玩家都平手" + f"\n```所有人的選擇是：\n{table}```"
-                )
-            elif self.winner:
-                await interaction.response.send_message(
-                    f"遊戲結束，三種拳都已經被出過了，最後一拳還未出時，勝利者是 ** {'**, **'.join(self.winner)}"
-                    + f"** \n```所有人的選擇是：\n{table}```"
-                )
+            await interaction.response.send_message(
+                f"遊戲結束，三種拳都已經被出過了，最後一拳還未出時，勝利者是 ** {'**, **'.join(self.winner)}"
+                + f"** \n```所有人的選擇是：\n{table}```"
+            )
         elif self.tie_players:
             await interaction.response.send_message(
                 f"遊戲結束，平手的玩家有 ** {'**, **'.join(self.tie_players)}"
