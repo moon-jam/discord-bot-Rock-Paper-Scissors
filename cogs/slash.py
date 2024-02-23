@@ -3,9 +3,17 @@ from typing import Optional
 from discord import app_commands
 from discord.ext import commands
 from discord.app_commands import Choice
-from prettytable import PrettyTable
+from matplotlib.font_manager import fontManager
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+from config import victory_color
+
+fontManager.addfont("./TaipeiSansTCBeta-Regular.ttf")
+matplotlib.rc("font", family="Taipei Sans TC Beta")
 
 # TODO: switch language to English
+
 
 class Slash(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -22,6 +30,9 @@ class Slash(commands.Cog):
             return
 
         self.game_active = True
+        self.players = {}
+        self.winner = []
+        self.tie_players = []
         await interaction.response.send_message("遊戲開始，請輸入你的拳")
 
     @app_commands.command(name="end_game", description="強制終止遊戲")
@@ -94,33 +105,67 @@ class Slash(commands.Cog):
             self.tie_players = []
 
     async def end_game(self, interaction: discord.Interaction):
-        print("end_game started")
-        table = PrettyTable(["玩家", "選擇"])
-        for player, choice in self.players.items():
-            if player in self.winner:
-                player = f"**{player}**"
-            table.add_row([player, choice])
-        if len(set(self.players.values())) == 3:
-            await interaction.response.send_message(
-                f"遊戲結束，三種拳都已經被出過了，最後一拳還未出時，勝利者是 ** {'**, **'.join(self.winner)}"
-                + f"** \n```所有人的選擇是：\n{table}```"
-            )
-        elif self.tie_players:
-            await interaction.response.send_message(
-                f"遊戲結束，平手的玩家有 ** {'**, **'.join(self.tie_players)}"
-                + f"** \n```所有人的選擇是：\n{table}```"
-            )
-        else:
-            await interaction.response.send_message(
-                f"遊戲結束，勝利者是  ** {'**, **'.join(self.winner)}"
-                + f"** \n```所有人的選擇是：\n{table}```"
-            )
+        try:
+            print("end_game started")
 
-        self.game_active = False
-        self.players = {}
-        self.winner = []
-        self.tie_players = []
-        print("end_game finished")
+            # 創建 DataFrame
+            data = {"玩家": list(self.players.keys()), "選擇": list(self.players.values())}
+            df = pd.DataFrame(data)
+
+            # 繪製表格
+            cell_colours = []
+            for player, choice in zip(df["玩家"], df["選擇"]):
+                if player in self.winner or player in self.tie_players:
+                    cell_colours.append([victory_color, victory_color])  
+                else:
+                    cell_colours.append(["lightgray", "lightgray"])  
+
+            num_rows, num_cols = df.shape
+            figsize = (20, (num_rows + 1) * 0.4)
+            fig, ax = plt.subplots(figsize=(figsize))
+            ax.axis("tight")
+            ax.axis("off")
+            the_table = ax.table(
+                cellText=df.values,
+                colLabels=df.columns,
+                cellLoc="center",
+                loc="center",
+                cellColours=cell_colours,
+                colColours=["gray"] * len(df.columns),
+            )
+            the_table.auto_set_font_size(False)
+            the_table.set_fontsize(12)
+            the_table.scale(2, 2)
+
+            fig.tight_layout()
+            # 保存表格圖片
+            plt.savefig("table.png", bbox_inches="tight", pad_inches=0.1)
+
+            if len(set(self.players.values())) == 3:
+                await interaction.response.send_message(
+                    f"遊戲結束，三種拳都已經被出過了，最後一拳還未出時，勝利者是 ** {'**, **'.join(self.winner)}"
+                    + f"**\n所有人的選擇是：",
+                    file=discord.File("table.png"),
+                )
+            elif self.tie_players:
+                await interaction.response.send_message(
+                    f"遊戲結束，平手的玩家有 ** {'**, **'.join(self.tie_players)}"
+                    + f"**\n所有人的選擇是：",
+                    file=discord.File("table.png"),
+                )
+            else:
+                await interaction.response.send_message(
+                    f"遊戲結束，勝利者是  ** {'**, **'.join(self.winner)}" + f"**\n所有人的選擇是：",
+                    file=discord.File("table.png"),
+                )
+
+            self.game_active = False
+            self.players = {}
+            self.winner = []
+            self.tie_players = []
+            print("end_game finished")
+        except Exception as e:
+            print(f"發生錯誤: {e}")
 
     @app_commands.command(name="rules", description="顯示遊戲規則")
     async def rules(self, interaction: discord.Interaction):

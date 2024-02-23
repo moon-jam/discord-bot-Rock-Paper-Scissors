@@ -1,7 +1,9 @@
 import time, discord, datetime
+
 # 導入discord.ext模組中的tasks工具
 from discord.ext import tasks, commands
 from config import channel_id
+
 
 class TaskBase(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,17 +17,18 @@ class TaskBase(commands.Cog):
         self.hi.cancel()
 
     # 定義要執行的循環函式
-    @tasks.loop(seconds = 60)
+    @tasks.loop(seconds=60)
     async def hi(self):
         execution_time = int(time.time() - self.start_time)
         print(f"{execution_time/60}min")
+
 
 class TaskAction(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.action.start()
 
-    @tasks.loop(seconds = 1)
+    @tasks.loop(seconds=1)
     async def action(self):
         print("Action")
         self.action.cancel()
@@ -42,6 +45,7 @@ class TaskAction(commands.Cog):
     async def action_after(self):
         print("Stop")
 
+
 class TaskCount(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -49,7 +53,7 @@ class TaskCount(commands.Cog):
         self.start_time = time.time()
 
     # 循環三次，每五秒輸出執行第幾次
-    @tasks.loop(seconds = 5, count = 3)
+    @tasks.loop(seconds=5, count=3)
     async def count(self):
         execution_time = int(time.time() - self.start_time)
         print(f"{execution_time}sec: Count {self.count.current_loop}")
@@ -60,31 +64,35 @@ class TaskCount(commands.Cog):
         execution_time = int(time.time() - self.start_time)
         print(f"{execution_time}sec: Count end")
 
+
 class TaskTime(commands.Cog):
     # 臺灣時區 UTC+8
-    tz = datetime.timezone(datetime.timedelta(hours = 8))
+    tz = datetime.timezone(datetime.timedelta(hours=8))
     # 設定每日十二點執行一次函式
-    everyday_time = datetime.time(hour = 0, minute = 0, tzinfo = tz)
+    everyday_time = datetime.time(hour=0, minute=0, tzinfo=tz)
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.everyday.start()
 
     # 每日十二點發送 "晚安!瑪卡巴卡!" 訊息
-    @tasks.loop(time = everyday_time)
+    @tasks.loop(time=everyday_time)
     async def everyday(self):
         channel = self.bot.get_channel(channel_id)
         embed = discord.Embed(
-            title = "🛏 晚安！瑪卡巴卡！",
-            description = f"🕛 現在時間 {datetime.date.today()} 00:00",
-            color = discord.Color.orange()
+            title="🛏 晚安！瑪卡巴卡！",
+            description=f"🕛 現在時間 {datetime.date.today()} 00:00",
+            color=discord.Color.orange(),
         )
-        await channel.send(embed = embed)
+        await channel.send(embed=embed)
+
 
 class TaskTimes(commands.Cog):
     # 設定整點執行一次函式
     every_hour_time = [
-        datetime.time(hour = i, minute = 0, tzinfo = datetime.timezone(datetime.timedelta(hours = 8)))
+        datetime.time(
+            hour=i, minute=0, tzinfo=datetime.timezone(datetime.timedelta(hours=8))
+        )
         for i in range(24)
     ]
 
@@ -93,18 +101,17 @@ class TaskTimes(commands.Cog):
         self.every_hour.start()
 
     # 每小時發送報時訊息
-    @tasks.loop(time = every_hour_time)
+    @tasks.loop(time=every_hour_time)
     async def every_hour(self):
         channel = self.bot.get_channel(channel_id)
         embed = discord.Embed(
-            title = f"⏰ 現在時間【{datetime.time.hour()}】時",
-            color = discord.Color.random()
+            title=f"⏰ 現在時間【{datetime.time.hour()}】時", color=discord.Color.random()
         )
-        await channel.send(embed = embed)
+        await channel.send(embed=embed)
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(TaskBase(bot))
-    await bot.add_cog(TaskAction(bot))
-    await bot.add_cog(TaskCount(bot))
+    # await bot.add_cog(TaskBase(bot))
+    # await bot.add_cog(TaskAction(bot))
+    # await bot.add_cog(TaskCount(bot))
     await bot.add_cog(TaskTime(bot))
     await bot.add_cog(TaskTimes(bot))
