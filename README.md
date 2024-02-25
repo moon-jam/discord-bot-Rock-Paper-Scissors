@@ -114,4 +114,4 @@ This project is licensed under the terms of the MIT license. For more informatio
 
 ## TODO
 
-[] Add English version
+- [ ] Add English version
