@@ -111,3 +111,7 @@ According to the SIL Open Font License 1.1, you are free to use, modify, and dis
 ## License
 
 This project is licensed under the terms of the MIT license. For more information, see the [LICENSE](./LICENSE) file.
+
+## TODO
+
+[] Add English version
