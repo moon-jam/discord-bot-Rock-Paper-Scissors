@@ -29,18 +29,19 @@ class Slash(commands.Cog):
             await interaction.response.send_message("遊戲已經開始")
             return
 
+        await interaction.response.send_message("Processing start_game...")
         self.game_active = True
         self.players = {}
         self.winner = []
         self.tie_players = []
-        await interaction.response.send_message("遊戲開始，請輸入你的拳")
+        await interaction.edit_original_response(content="遊戲開始，請輸入你的拳")
 
     @app_commands.command(name="end_game", description="強制終止遊戲")
     async def end_game_command(self, interaction: discord.Interaction):
         if not self.game_active:
             await interaction.response.send_message("遊戲尚未開始")
             return
-
+        await interaction.response.send_message("Processing end_game...")
         await self.end_game(interaction)
         print("遊戲已被強制終止")
 
@@ -54,31 +55,35 @@ class Slash(commands.Cog):
         ]
     )
     async def play(self, interaction: discord.Interaction, choice: Choice[str]):
-        if not self.game_active:
-            await interaction.response.send_message("遊戲尚未開始")
-            return
+        try:
+            if not self.game_active:
+                await interaction.response.send_message("遊戲尚未開始")
+                return
 
-        player = interaction.user.display_name
-        if player in self.players:
-            await interaction.response.send_message("你已經出過拳了")
-            return
+            player = interaction.user.display_name
+            if player in self.players:
+                await interaction.response.send_message("你已經出過拳了")
+                return
 
-        self.players[player] = choice.value
+            await interaction.response.send_message("Processing play...")
+            self.players[player] = choice.value
 
-        if len(self.players) == 1:
-            await interaction.response.send_message("需要更多玩家參與遊戲")
-        elif len(set(self.players.values())) == 3:
-            await self.end_game(interaction)
-        elif len(self.players) == 2:
-            self.determine_winner()
-            if self.tie_players:
-                await interaction.response.send_message(
-                    f"目前平手的玩家有 ** {'**, **'.join(self.tie_players)}" + "**"
-                )
-            elif self.winner:
-                await interaction.response.send_message(
-                    f"當前勝利者是 ** {'**, **'.join(self.winner)}" + "**"
-                )
+            if len(self.players) == 1:
+                await interaction.edit_original_response(content="需要更多玩家參與遊戲")
+            elif len(set(self.players.values())) == 3:
+                await self.end_game(interaction)
+            elif len(set(self.players.values())) == 2:
+                self.determine_winner()
+                if self.tie_players:
+                    await interaction.edit_original_response(content=
+                        f"目前平手的玩家有 ** {'**, **'.join(self.tie_players)}" + "**"
+                    )
+                elif self.winner:
+                    await interaction.edit_original_response(
+                        content=f"當前勝利者是 ** {'**, **'.join(self.winner)}" + "**"
+                    )
+        except Exception as e:
+            print(f"發生錯誤: {e}")
 
     def determine_winner(self):
         choices = list(self.players.values())
@@ -140,23 +145,24 @@ class Slash(commands.Cog):
             fig.tight_layout()
             # 保存表格圖片
             plt.savefig("table.png", bbox_inches="tight", pad_inches=0.1)
+            file = discord.File("table.png", filename="table.png")
 
             if len(set(self.players.values())) == 3:
-                await interaction.response.send_message(
+                await interaction.edit_original_response(content=
                     f"遊戲結束，三種拳都已經被出過了，最後一拳還未出時，勝利者是 ** {'**, **'.join(self.winner)}"
                     + f"**\n所有人的選擇是：",
-                    file=discord.File("table.png"),
+                    attachments=[file]
                 )
             elif self.tie_players:
-                await interaction.response.send_message(
+                await interaction.edit_original_response(content=
                     f"遊戲結束，平手的玩家有 ** {'**, **'.join(self.tie_players)}"
                     + f"**\n所有人的選擇是：",
-                    file=discord.File("table.png"),
+                    attachments=[file]
                 )
             else:
-                await interaction.response.send_message(
+                await interaction.edit_original_response(content=
                     f"遊戲結束，勝利者是  ** {'**, **'.join(self.winner)}" + f"**\n所有人的選擇是：",
-                    file=discord.File("table.png"),
+                    attachments=[file]
                 )
 
             self.game_active = False
