@@ -10,6 +10,7 @@ This is a Discord bot that allows users to play the game of Rock, Paper, Scissor
 - Utilizes Discord's Slash Commands, allowing players to interact with the game directly in the chat.
 - The game results are visualized in a table format at the end of the game. This graphical table lists all players' choices and highlights the winners or players who tied, providing a clear and concise view of the outcomes. This ensures consistent formatting across all devices and platforms. See the example below:
 ![Game Result Table Example](./assets/table.png)
+- Supports English and Traditional Chinese. Players can switch the language of the game commands and messages using the `/set_language` command.
 
 ## Game Rules
 
@@ -17,6 +18,7 @@ This is a Discord bot that allows users to play the game of Rock, Paper, Scissor
 - Play by choosing rock, paper, or scissors with `/play`
 - End the game at any time with `/end_game`
 - Display the game rules with `/rules`
+- Change the language of the game commands and messages with `/set_language`
 - The game ends when all three choices have been made by the players or the game is forcibly ended.
 
 ## Setup
@@ -90,6 +92,7 @@ Configuration variables are stored in `config.py`. You need to set the following
 - `discord_bot_token`: The token of your Discord bot.
 - `channel_id`: The ID of the channel where the bot will be used.
 - `victory_color`: This is the color used to highlight the winners or players who tied in the game result table. The default color is "#FFFAB5".
+- `default_language`: This is the default language used by the bot. The available options are "en" for English and "zh" for Traditional Chinese. The default language is "en".
 
 ## FAQ
 

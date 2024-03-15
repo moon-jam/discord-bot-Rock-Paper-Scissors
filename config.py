@@ -10,4 +10,4 @@ channel_id = 1234567890
 victory_color = "#FFFAB5"
 
 # your default language
-default_language = "zh"
+default_language = "en"
