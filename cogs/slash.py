@@ -7,7 +7,9 @@ from matplotlib.font_manager import fontManager
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
-from config import victory_color
+
+from config import victory_color, default_language
+from lang import MESSAGES, DESCRIPTIONS, CHOICES_DESCRIPTIONS, COLUMNS
 
 fontManager.addfont("./TaipeiSansTCBeta-Regular.ttf")
 matplotlib.rc("font", family="Taipei Sans TC Beta")
@@ -22,68 +24,105 @@ class Slash(commands.Cog):
         self.players = {}
         self.winner = []
         self.tie_players = []
+        self.language = default_language
 
-    @app_commands.command(name="start_game", description="開始猜拳遊戲")
+    @app_commands.command(
+        name="set_language", description=DESCRIPTIONS["set_language"][default_language]
+    )
+    @app_commands.choices(
+        choice=[
+            Choice(name="English", value="en"),
+            Choice(name="中文", value="zh"),
+        ]
+    )
+    async def set_language(self, interaction: discord.Interaction, choice: Choice[str]):
+        language = choice
+        self.language = language.value
+        await interaction.response.send_message(
+            MESSAGES["language_set"][self.language].format(language.name)
+        )
+
+    @app_commands.command(
+        name="start_game", description=DESCRIPTIONS["start_game"][default_language]
+    )
     async def start_game(self, interaction: discord.Interaction):
         if self.game_active:
-            await interaction.response.send_message("遊戲已經開始")
+            MESSAGES["game_already_started"][self.language]
             return
 
-        await interaction.response.send_message("Processing start_game...")
         self.game_active = True
         self.players = {}
         self.winner = []
         self.tie_players = []
-        await interaction.edit_original_response(content="遊戲開始，請輸入你的拳")
+        await interaction.response.send_message(MESSAGES["start_game"][self.language])
 
-    @app_commands.command(name="end_game", description="強制終止遊戲")
+    @app_commands.command(
+        name="end_game", description=DESCRIPTIONS["end_game"][default_language]
+    )
     async def end_game_command(self, interaction: discord.Interaction):
         if not self.game_active:
-            await interaction.response.send_message("遊戲尚未開始")
+            await interaction.response.send_message(
+                MESSAGES["game_not_started"][self.language]
+            )
             return
         await interaction.response.send_message("Processing end_game...")
         await self.end_game(interaction)
-        print("遊戲已被強制終止")
+        print("game forced end")
 
-    @app_commands.command(name="play", description="出拳")
-    @app_commands.describe(choice="輸入你的拳")
+    @app_commands.command(
+        name="play", description=DESCRIPTIONS["play"][default_language]
+    )
+    @app_commands.describe(choice=DESCRIPTIONS["input_move"][default_language])
     @app_commands.choices(
         choice=[
-            Choice(name="石頭", value="rock"),
-            Choice(name="剪刀", value="scissors"),
-            Choice(name="布", value="paper"),
+            Choice(name=CHOICES_DESCRIPTIONS["rock"][default_language], value="rock"),
+            Choice(
+                name=CHOICES_DESCRIPTIONS["scissors"][default_language],
+                value="scissors",
+            ),
+            Choice(name=CHOICES_DESCRIPTIONS["paper"][default_language], value="paper"),
         ]
     )
     async def play(self, interaction: discord.Interaction, choice: Choice[str]):
         try:
             if not self.game_active:
-                await interaction.response.send_message("遊戲尚未開始")
+                await interaction.response.send_message(
+                    MESSAGES["game_not_started"][self.language]
+                )
                 return
 
             player = interaction.user.display_name
             if player in self.players:
-                await interaction.response.send_message("你已經出過拳了")
+                await interaction.response.send_message(
+                    MESSAGES["already_moved"][self.language]
+                )
                 return
 
             await interaction.response.send_message("Processing play...")
             self.players[player] = choice.value
 
             if len(self.players) == 1:
-                await interaction.edit_original_response(content="需要更多玩家參與遊戲")
+                await interaction.edit_original_response(
+                    content=MESSAGES["need_more_players"][self.language]
+                )
             elif len(set(self.players.values())) == 3:
                 await self.end_game(interaction)
             elif len(set(self.players.values())) == 2:
                 self.determine_winner()
                 if self.tie_players:
-                    await interaction.edit_original_response(content=
-                        f"目前平手的玩家有 ** {'**, **'.join(self.tie_players)}" + "**"
+                    await interaction.edit_original_response(
+                        content=MESSAGES["tie_players"][self.language]
+                        + f"** {'**, **'.join(self.tie_players)}"
+                        + "**"
                     )
                 elif self.winner:
                     await interaction.edit_original_response(
-                        content=f"當前勝利者是 ** {'**, **'.join(self.winner)}" + "**"
+                        content=MESSAGES["current_winner"][self.language]
+                        + f"** {'**, **'.join(self.winner)}"
+                        + "**"
                     )
         except Exception as e:
-            print(f"發生錯誤: {e}")
+            print(f"err: {e}")
 
     def determine_winner(self):
         choices = list(self.players.values())
@@ -114,16 +153,22 @@ class Slash(commands.Cog):
             print("end_game started")
 
             # 創建 DataFrame
-            data = {"玩家": list(self.players.keys()), "選擇": list(self.players.values())}
+            data = {
+                COLUMNS["player"][self.language]: list(self.players.keys()),
+                COLUMNS["choice"][self.language]: list(self.players.values()),
+            }
             df = pd.DataFrame(data)
 
             # 繪製表格
             cell_colours = []
-            for player, choice in zip(df["玩家"], df["選擇"]):
+            for player, choice in zip(
+                df[COLUMNS["player"][self.language]],
+                df[COLUMNS["choice"][self.language]],
+            ):
                 if player in self.winner or player in self.tie_players:
-                    cell_colours.append([victory_color, victory_color])  
+                    cell_colours.append([victory_color, victory_color])
                 else:
-                    cell_colours.append(["lightgray", "lightgray"])  
+                    cell_colours.append(["lightgray", "lightgray"])
 
             num_rows, num_cols = df.shape
             figsize = (20, (num_rows + 1) * 0.4)
@@ -148,21 +193,28 @@ class Slash(commands.Cog):
             file = discord.File("table.png", filename="table.png")
 
             if len(set(self.players.values())) == 3:
-                await interaction.edit_original_response(content=
-                    f"遊戲結束，三種拳都已經被出過了，最後一拳還未出時，勝利者是 ** {'**, **'.join(self.winner)}"
-                    + f"**\n所有人的選擇是：",
-                    attachments=[file]
+                await interaction.edit_original_response(
+                    content=MESSAGES["game_ended_all_moves"][self.language]
+                    + f"** {'**, **'.join(self.winner)}"
+                    + f"**\n"
+                    + MESSAGES["all_players_choices"][self.language],
+                    attachments=[file],
                 )
             elif self.tie_players:
-                await interaction.edit_original_response(content=
-                    f"遊戲結束，平手的玩家有 ** {'**, **'.join(self.tie_players)}"
-                    + f"**\n所有人的選擇是：",
-                    attachments=[file]
+                await interaction.edit_original_response(
+                    content=MESSAGES["game_ended_tie"][self.language]
+                    + f"** {'**, **'.join(self.tie_players)}"
+                    + f"**\n"
+                    + MESSAGES["all_players_choices"][self.language],
+                    attachments=[file],
                 )
             else:
-                await interaction.edit_original_response(content=
-                    f"遊戲結束，勝利者是  ** {'**, **'.join(self.winner)}" + f"**\n所有人的選擇是：",
-                    attachments=[file]
+                await interaction.edit_original_response(
+                    content=MESSAGES["game_ended_winner"][self.language]
+                    + f"** {'**, **'.join(self.winner)}"
+                    + f"**\n"
+                    + MESSAGES["all_players_choices"][self.language],
+                    attachments=[file],
                 )
 
             self.game_active = False
@@ -171,22 +223,13 @@ class Slash(commands.Cog):
             self.tie_players = []
             print("end_game finished")
         except Exception as e:
-            print(f"發生錯誤: {e}")
+            print(f"err: {e}")
 
-    @app_commands.command(name="rules", description="顯示遊戲規則")
+    @app_commands.command(
+        name="rules", description=DESCRIPTIONS["rules"][default_language]
+    )
     async def rules(self, interaction: discord.Interaction):
-        rules_message = """
-歡迎來到猜拳遊戲！以下是遊戲規則：
-
-1. 使用 /start_game 開始遊戲。
-2. 使用 /play 並選擇你的拳（石頭、剪刀或布）。
-3. 如果遊戲中有超過一個玩家，遊戲將決定勝利者。
-4. 如果所有三種拳都被選擇，遊戲將結束。
-5. 使用 /end_game 可以在任何時候終止遊戲。
-
-祝你遊戲愉快！
-        """
-        await interaction.response.send_message(rules_message)
+        await interaction.response.send_message(MESSAGES["rules"][self.language])
 
 
 async def setup(bot: commands.Bot):
