@@ -57,6 +57,7 @@ Welcome to the Rock Paper Scissors game! Here are the rules:
 3. If there are more than one player in the game, the game will determine the winner.
 4. If all three moves are chosen, the game will end.
 5. Use /end_game to end the game at any time.
+6. Use /set_language to change the language of the game commands and messages.
 
 Enjoy the game!
         """,
@@ -68,6 +69,7 @@ Enjoy the game!
 3. 如果遊戲中有超過一個玩家，遊戲將決定勝利者。
 4. 如果所有三種拳都被選擇，遊戲將結束。
 5. 使用 /end_game 可以在任何時候終止遊戲。
+6. 使用 /set_language 可以改變遊戲指令和訊息的語言。
 
 祝你遊戲愉快！
         """
