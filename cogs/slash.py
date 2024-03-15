@@ -14,9 +14,6 @@ from lang import MESSAGES, DESCRIPTIONS, CHOICES_DESCRIPTIONS, COLUMNS
 fontManager.addfont("./TaipeiSansTCBeta-Regular.ttf")
 matplotlib.rc("font", family="Taipei Sans TC Beta")
 
-# TODO: switch language to English
-
-
 class Slash(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
